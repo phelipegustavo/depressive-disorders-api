@@ -12,7 +12,7 @@ const config = require('../config');
 const findOrCreateCache = async (key, cb, time=60*60*24) => {
 
     try {
-        const client = redis.createClient(config.redis.port)            
+        const client = redis.createClient(config.redis.port, config.redis.host, config.redis)            
         const cached = await client.get(key);
     
         if (!cached) {

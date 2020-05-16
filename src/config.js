@@ -1,20 +1,22 @@
 module.exports = {
     
-    port: process.env.PORT || 5555,
+    port: process.env.PORT || 8080,
     host: process.env.HOST || 'localhost',
     
     mongo: {
-        host: process.env.MONGO_HOST || 'localhost',
-        port: process.env.MONGO_PORT || 27017,
+        driver: process.env.MONGO_DRIVER || 'mongodb+srv',
+        host: process.env.MONGO_HOST || 'cluster0-dzvzr.gcp.mongodb.net',
+        port: process.env.MONGO_PORT,
         user: process.env.MONGO_USER || 'admin',
         password: process.env.MONGO_PASSWORD || 'admin',
-        database: process.env.MONDO_DATABASE || 'admin',
+        database: process.env.MONGO_DATABASE || 'depressive-disorders',
     },
 
     redis: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: process.env.REDIS_PORT || 6379,
-        auth: process.env.REDIS_PASS || '',
+        // depressive-disorders
+        host: process.env.REDIS_HOST || 'redis-17316.c84.us-east-1-2.ec2.cloud.redislabs.com',
+        port: process.env.REDIS_PORT || 17316,
+        auth: process.env.REDIS_PASS || 'C4TrdXOVcZtwM8nCphiauGdotYSJHH9s',
         options: {
           no_ready_check: false
         }

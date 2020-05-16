@@ -5,7 +5,7 @@ const Keyword = require('../Models/Keyword');
 const log = require('../Utils/Logger');
 const { redis } = require('../config');
 
-const Queue = kue.createQueue(redis)
+const Queue = kue.createQueue({redis})
 
 /**
  * ProcessKeywords
