@@ -1,7 +1,6 @@
 module.exports = {
     
-    port: process.env.PORT || 8080,
-    host: process.env.HOST || 'localhost',
+    port: process.env.PORT || 5000,
     
     mongo: {
         driver: process.env.MONGO_DRIVER || 'mongodb+srv',
