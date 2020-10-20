@@ -62,13 +62,36 @@ module.exports = {
     async list(req, res) {
         try {
 
-            countries = await Country.find().select('_id name regex code');
+            let countries = await Country
+                .find()
+                .select('_id name regex code')
+                .sort({ name: 1 })
+                .exec();
+
+            countries = await Promise.all(countries.map(async country => {
+                const keywords = await Keyword.aggregate([
+                    {
+                        $match: {
+                            countries: { $eq: Types.ObjectId(country._id) },
+                        }
+                    },
+                    {
+                        $group: { _id: country._id, total: { $sum: 1 } }
+                    },
+                    { $project: { _id: 0 } }
+                ]).exec();
+
+                const total = keywords[0] ? keywords[0].total : 0
+                return {...country._doc, keywords: total}
+            }))
 
             res.json({message: 'ok', countries})
             
         } catch (error) {
-            console.log(error)
-            res.json({error})
+            res.status(400).json({
+                message: 'FAIL TO LIST',
+                error: error.message
+            })
         }
     },
 
@@ -79,49 +102,66 @@ module.exports = {
      * @param {*} res 
      */
     async keywords(req, res) {
+        try {
+            let { country } = req.params;
+            let { page, perPage, search } = req.query;
 
-        const { country } = req.params;
-        let { page, perPage, search } = req.query;
+            page = page ? Number(page) : 1;
+            perPage = perPage ? Number(perPage) : 10;
+            search = search ? search : '';
 
-        page = page ? Number(page) : 1;
-        perPage = perPage ? Number(perPage) : 10;
-        search = search ? search : '';
-
-        const keywords = await Keyword.aggregate([
-            {
-                $match: {
-                    countries: { $eq: Types.ObjectId(country) }
-                }
-            },
-            { 
-                $project: {
-                    _id: "$_id",
-                    name: "$name",
-                    countries: {
-                        $filter: {
-                            input: "$countries",
-                            as: "country",
-                            cond: { $eq: ["$$country", Types.ObjectId(country)] }
+            country = await Country.findOne({code: country}).select('_id name regex code').orFail();
+            
+            const exp = new RegExp(`.*${search}.*`, 'gi');
+            const keywords = await Keyword.aggregate([
+                {
+                    $match: {
+                        countries: { $eq: Types.ObjectId(country._id) },
+                        name: exp
+                    }
+                },
+                { 
+                    $project: {
+                        _id: "$_id",
+                        name: "$name",
+                        countries: {
+                            $filter: {
+                                input: "$countries",
+                                as: "country",
+                                cond: { $eq: ["$$country", Types.ObjectId(country._id)] }
+                            }
                         }
                     }
-                }
-            },
-            {
-                $project: {
-                    _id: "$_id",
-                    name: "$name",
-                    country: { $arrayElemAt: ["$countries", 0] },
-                    total: { $size: "$countries" }
-                }
-            },
-            {
-                $sort : { total : -1 }
-            },
-            {
-                $limit: 5,
-            }
-        ]).exec();
+                },
+                {
+                    $project: {
+                        _id: "$_id",
+                        name: "$name",
+                        country: { $arrayElemAt: ["$countries", 0] },
+                        total: { $size: "$countries" }
+                    }
+                },
+                {
+                    $sort : { total : -1 }
+                },
+                { 
+                    $skip: (page-1) * perPage
+                },
+                {
+                    $limit: perPage,
+                },
+            ]).exec();
 
-        res.json(keywords)
+            return res.json({
+                country,
+                keywords,
+            });
+
+        } catch (e) {
+            return res.status(400)   .json({
+                message: 'FAIL TO LIST',
+                error: e.message
+            })
+        }
     }
 }

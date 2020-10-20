@@ -119,5 +119,32 @@ module.exports = {
             .exec()
 
         res.json(publications)
-    }
+    },
+
+    /**
+     * Get Publication
+     * 
+     * @param {*} req 
+     * @param {*} res 
+     */
+    async get(req, res) {
+        try {
+            const { id } = req.params;
+
+            const publication = await Publication
+                .findOne({'pmc': id})
+                .select('_id pmc title affiliations country')
+                .orFail()
+                .exec();
+            return res.json({
+                message: 'PUBLICATION FOUND', 
+                publication
+            });
+        } catch (e) {
+            res.status(400).json({
+                message: 'FAIL TO GET',
+                error: e.message,
+            });
+        }
+    },
 }

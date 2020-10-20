@@ -22,6 +22,9 @@ routes.get('/publications/count', PublicationsController.count);
 // List all publictions
 routes.get('/publications', PublicationsController.list);
 
+// Get some publication
+routes.get('/publications/:id', PublicationsController.get);
+
 // Save publication
 routes.post('/publications', PublicationsController.save);
 
